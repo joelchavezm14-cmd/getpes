@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>https://www.getpes.com/</loc>
+    <priority>1.0</priority>
+  </url>
+  <url>
+    <loc>https://www.getpes.com/nosotros.html</loc>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.getpes.com/portafolio.html</loc>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.getpes.com/portafolio-redes.html</loc>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.getpes.com/portafolio-video.html</loc>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.getpes.com/portafolio-campanas.html</loc>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.getpes.com/contacto.html</loc>
+    <priority>0.8</priority>
+  </url>
+</urlset>
