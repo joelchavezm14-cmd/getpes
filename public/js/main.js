@@ -117,6 +117,7 @@ const SERVICE_LABELS = {
   redes: 'Gestión de redes',
   video: 'Edición de video',
   campanas: 'Campañas digitales',
+  branding: 'Branding y diseño',
   otro: 'Otro',
 };
 

@@ -55,7 +55,7 @@ export async function api(req,env) {
     if(body.website)fail(400,'Solicitud no válida.');
     const name=text(body.name,150),email=text(body.email,254),contact=text(body.contact||'',200,false),industry=text(body.industry||'',150,false),message=text(body.message||'',2400,false);
     if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))fail(400,'Revisa tu correo electrónico.');
-    const services={redes:'Gestión de redes',video:'Edición de video',campanas:'Campañas digitales',otro:'Otro'};
+    const services={redes:'Gestión de redes',video:'Edición de video',campanas:'Campañas digitales',branding:'Branding y diseño',otro:'Otro'};
     const service=services[choice(body.service,Object.keys(services))];
     if(!/^[a-f0-9-]{36}$/.test(body.request_id||''))fail(400,'Recarga el formulario e intenta nuevamente.');
     const id='web-'+await digest(body.request_id+JSON.stringify([name,email,contact,industry,service,message]));
