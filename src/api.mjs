@@ -80,7 +80,16 @@ export async function api(req,env) {
     const id=await company(url.searchParams.get('company')),m=month(url.searchParams.get('month'));
     const report=await one('SELECT * FROM reports WHERE company_id=? AND month=?'+(user.role==='admin'?'':' AND published=1'),id,m);
     const comparison=await all('SELECT month,COUNT(*) AS entries,SUM(spend) AS spend,SUM(leads) AS leads FROM campaigns WHERE company_id=? AND month>=? AND month<=? GROUP BY month ORDER BY month',id,'2026-09','2027-12');
-    return json({comparison,campaigns:await all('SELECT * FROM campaigns WHERE company_id=? AND month=? ORDER BY name',id,m),tasks:await all('SELECT * FROM tasks WHERE company_id=? AND date>=? AND date<=? ORDER BY date,title',id,m+'-01',m+'-31'),report:report?{...report,config:JSON.parse(report.config)}:null});
+    return json({leads:await all('SELECT * FROM leads WHERE company_id=? ORDER BY updated_at DESC',id),comparison,campaigns:await all('SELECT * FROM campaigns WHERE company_id=? AND month=? ORDER BY name',id,m),tasks:await all('SELECT * FROM tasks WHERE company_id=? AND date>=? AND date<=? ORDER BY date,title',id,m+'-01',m+'-31'),report:report?{...report,config:JSON.parse(report.config)}:null});
+  }
+  if(path==='/api/leads'&&write){
+    admin();const cid=await company(body.company_id),id=body.id?text(body.id,100):crypto.randomUUID();
+    if(body.id&&!await one('SELECT id FROM leads WHERE id=? AND company_id=?',id,cid))fail(404,'Prospecto no encontrado.');
+    if(req.method==='DELETE'){if(!body.id)fail(400,'Selecciona un prospecto.');await run('DELETE FROM leads WHERE id=? AND company_id=?',id,cid);return json({ok:true});}
+    const stage=choice(body.stage,['Nuevos','Contactados','En negociación','Ganados','Perdidos']),stamp=new Date().toISOString();
+    if(req.method==='PATCH'){if(!body.id)fail(400,'Selecciona un prospecto.');await run('UPDATE leads SET stage=?,updated_at=? WHERE id=? AND company_id=?',stage,stamp,id,cid);return json({ok:true});}
+    if(req.method!=='POST')fail(405,'Método no permitido.');
+    await run('INSERT INTO leads(id,company_id,name,contact,source,stage,value,follow_up,notes,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET name=excluded.name,contact=excluded.contact,source=excluded.source,stage=excluded.stage,value=excluded.value,follow_up=excluded.follow_up,notes=excluded.notes,updated_at=excluded.updated_at',id,cid,text(body.name,150),text(body.contact||'',200,false),choice(body.source,['Meta Ads','Google Ads','Orgánico','Referido','Otro']),stage,number(body.value||0),body.follow_up?date(body.follow_up):'',text(body.notes||'',3000,false),stamp,stamp);return json({ok:true});
   }
   if(['/api/campaigns','/api/tasks','/api/reports'].includes(path)&&write){
     admin();const cid=await company(body.company_id),table=path.split('/').pop(),id=body.id||crypto.randomUUID();

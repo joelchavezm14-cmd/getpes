@@ -21,6 +21,18 @@ test('authentication, company isolation, report visibility and CRUD',async()=>{
  const comparison=(await call('/api/data?company=lgna&month=2026-09',null,cc)).data.comparison;
  assert.deepEqual(comparison,[{month:'2026-09',entries:2,spend:150,leads:15},{month:'2027-12',entries:1,spend:80,leads:0}]);
  const task={company_id:'lgna',title:'Grabación',date:'2026-09-15',type:'Grabación',status:'Pendiente',notes:'Details',url:''};
+ const prospect={company_id:'lgna',name:'Prospecto de prueba',contact:'test@example.com',stage:'Nuevos',source:'Referido',value:250,follow_up:'2027-01-05',notes:'Test'};
+ assert.equal((await call('/api/leads',prospect,cc)).status,403);
+ assert.equal((await call('/api/leads',prospect,ac)).status,200);
+ let prospects=(await call('/api/data?company=lgna&month=2026-09',null,cc)).data.leads;assert.equal(prospects.length,1);const prospectId=prospects[0].id;
+ assert.equal((await call('/api/leads',{...prospect,id:prospectId,company_id:other},ac)).status,404);
+ assert.equal((await call('/api/leads',{...prospect,id:prospectId,stage:'Invalid'},ac,'PATCH')).status,400);
+ assert.equal((await call('/api/leads',{...prospect,id:prospectId,stage:'Ganados'},cc,'PATCH')).status,403);
+ assert.equal((await call('/api/leads',{...prospect,id:prospectId,stage:'Ganados'},ac,'PATCH')).status,200);
+ assert.equal((await call('/api/data?company=lgna&month=2027-12',null,cc)).data.leads[0].stage,'Ganados');
+ assert.equal((await call('/api/data?company='+other+'&month=2026-09',null,ac)).data.leads.length,0);
+ assert.equal((await call('/api/leads',{...prospect,id:prospectId},ac,'DELETE')).status,200);
+ assert.equal((await call('/api/data?company=lgna&month=2026-09',null,cc)).data.leads.length,0);
  assert.equal((await call('/api/tasks',task,ac)).status,200);assert.equal((await call('/api/tasks',{...task,url:'javascript:alert(1)'},ac)).status,400);
  let data=(await call('/api/data?company=lgna&month=2026-09',null,cc)).data;assert.equal(data.campaigns.length,2);assert.equal(data.tasks.length,1);
  assert.equal((await call('/api/tasks',{...task,id:data.tasks[0].id,company_id:other},ac)).status,404);
