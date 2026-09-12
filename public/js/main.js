@@ -257,6 +257,26 @@ function initHeroSlider() {
   // El carrusel avanza a petición para permitir leer sin interrupciones.
 }
 
+function initReviewsCarousel() {
+  const track = document.getElementById('reviews-track');
+  if (!track) return;
+  const previous = document.querySelector('[data-review-prev]');
+  const next = document.querySelector('[data-review-next]');
+  const update = () => {
+    previous.disabled = track.scrollLeft < 2;
+    next.disabled = track.scrollLeft >= track.scrollWidth - track.clientWidth - 2;
+  };
+  const move = direction => track.scrollBy({left: direction * (track.firstElementChild.getBoundingClientRect().width + parseFloat(getComputedStyle(track).columnGap)), behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth'});
+  previous.addEventListener('click', () => move(-1));
+  next.addEventListener('click', () => move(1));
+  track.addEventListener('scroll', update, {passive:true});
+  track.addEventListener('keydown', event => {
+    if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {event.preventDefault();move(event.key === 'ArrowLeft' ? -1 : 1);}
+  });
+  new ResizeObserver(update).observe(track);
+  update();
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   renderHeader();
   renderFooter();
@@ -264,4 +284,5 @@ document.addEventListener('DOMContentLoaded', () => {
   initContactForm();
   initScrollReveal();
   initHeroSlider();
+  initReviewsCarousel();
 });
