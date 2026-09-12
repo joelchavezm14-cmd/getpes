@@ -15,6 +15,13 @@
       "when": 1789190441625,
       "tag": "0001_common_warlock",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1789191191726,
+      "tag": "0002_messy_madame_hydra",
+      "breakpoints": true
     }
   ]
 }
