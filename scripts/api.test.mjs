@@ -24,7 +24,12 @@ test('authentication, company isolation, report visibility and CRUD',async()=>{
  const prospect={company_id:'lgna',name:'Prospecto de prueba',contact:'test@example.com',stage:'Nuevos',source:'Referido',value:250,follow_up:'2027-01-05',notes:'Test'};
  assert.equal((await call('/api/leads',prospect,cc)).status,403);
  assert.equal((await call('/api/leads',prospect,ac)).status,200);
+ const emailProspect={...prospect,email:'ventas@example.com',industry:'Inmobiliaria'};
+ assert.equal((await call('/api/leads',{...emailProspect,email:'correo-invalido'},ac)).status,400);
  let prospects=(await call('/api/data?company=lgna&month=2026-09',null,cc)).data.leads;assert.equal(prospects.length,1);const prospectId=prospects[0].id;
+ assert.equal((await call('/api/leads',{...emailProspect,id:prospectId},ac)).status,200);
+ const savedProspect=(await call('/api/data?company=lgna&month=2026-09',null,cc)).data.leads[0];
+ assert.equal(savedProspect.email,'ventas@example.com');assert.equal(savedProspect.industry,'Inmobiliaria');
  assert.equal((await call('/api/leads',{...prospect,id:prospectId,company_id:other},ac)).status,404);
  assert.equal((await call('/api/leads',{...prospect,id:prospectId,stage:'Invalid'},ac,'PATCH')).status,400);
  assert.equal((await call('/api/leads',{...prospect,id:prospectId,stage:'Ganados'},cc,'PATCH')).status,403);
