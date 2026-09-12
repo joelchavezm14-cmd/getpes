@@ -125,13 +125,18 @@ function initContactForm() {
   if (!form) return;
   const status = document.getElementById('form-status');
 
-  form.addEventListener('submit', (e) => {
+  let requestId = crypto.randomUUID();
+  const submit = form.querySelector('[type="submit"]');
+  form.addEventListener('submit', async (e) => {
     e.preventDefault();
+    if (submit.disabled) return;
 
     const name = form.querySelector('#name').value.trim();
     const email = form.querySelector('#email').value.trim();
     const service = form.querySelector('#service').value;
     const message = form.querySelector('#message').value.trim();
+    const contact = form.querySelector('#contact').value.trim();
+    const industry = form.querySelector('#industry').value.trim();
 
     if (!form.checkValidity()) {
       form.reportValidity();
@@ -144,19 +149,33 @@ function initContactForm() {
       `Me interesa: ${SERVICE_LABELS[service] || service}`,
     ];
     if (message) lines.push(`Mensaje: ${message}`);
+    if (contact) lines.push(`Teléfono: ${contact}`);
+    if (industry) lines.push(`Rubro: ${industry}`);
 
     const text = encodeURIComponent(lines.join('\n'));
     const url = `https://wa.me/${WHATSAPP_NUMBER}?text=${text}`;
 
-    status.textContent = `Abriendo WhatsApp para continuar la conversación, ${name.split(' ')[0]}.`;
+    status.textContent = 'Guardando tu consulta…';
     status.classList.add('show');
-
-    if (window.matchMedia('(max-width: 860px)').matches) {
+    submit.disabled = true;
+    try {
+      const response = await fetch('/api/contact', {
+        method: 'POST', headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({name,email,service,message,contact,industry,request_id:requestId,website:form.elements.website.value}),
+        signal: AbortSignal.timeout(20000),
+      });
+      const result = await response.json();
+      if (!response.ok || !result.ok) throw new Error(result.error || 'No pudimos confirmar el guardado. Intenta nuevamente.');
+      status.textContent = 'Consulta guardada. Continúa en WhatsApp para enviar tu mensaje.';
+      const link = document.createElement('a');
+      link.href = url; link.textContent = ' Abrir WhatsApp';
+      status.append(link);
       window.location.assign(url);
-      return;
+    } catch (error) {
+      status.textContent = error.name === 'TimeoutError' ? 'No pudimos confirmar el guardado. Intenta nuevamente; evitaremos duplicar la consulta.' : (error.message || 'No se pudo guardar. Revisa tu conexión e intenta nuevamente.');
+    } finally {
+      submit.disabled = false;
     }
-
-    window.location.assign(url);
   });
 }
 

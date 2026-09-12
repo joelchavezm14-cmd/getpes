@@ -51,6 +51,25 @@ export async function api(req,env) {
     await run('DELETE FROM sessions WHERE expires<?',Date.now());
     return json({ok:true},200,{'set-cookie':cookie(fresh,req)});
   }
+  if(path==='/api/contact'&&req.method==='POST'){
+    if(body.website)fail(400,'Solicitud no válida.');
+    const name=text(body.name,150),email=text(body.email,254),contact=text(body.contact||'',200,false),industry=text(body.industry||'',150,false),message=text(body.message||'',2400,false);
+    if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))fail(400,'Revisa tu correo electrónico.');
+    const services={redes:'Gestión de redes',video:'Edición de video',campanas:'Campañas digitales',otro:'Otro'};
+    const service=services[choice(body.service,Object.keys(services))];
+    if(!/^[a-f0-9-]{36}$/.test(body.request_id||''))fail(400,'Recarga el formulario e intenta nuevamente.');
+    const id='web-'+await digest(body.request_id+JSON.stringify([name,email,contact,industry,service,message]));
+    const key='contact:'+await digest(req.headers.get('cf-connecting-ip')||'local'),now=Date.now();
+    await run('INSERT INTO login_attempts(key,count,reset_at) VALUES(?,1,?) ON CONFLICT(key) DO UPDATE SET count=CASE WHEN reset_at<? THEN 1 ELSE count+1 END,reset_at=CASE WHEN reset_at<? THEN excluded.reset_at ELSE reset_at END',key,now+900000,now,now);
+    if((await one('SELECT count FROM login_attempts WHERE key=?',key)).count>10)fail(429,'Has enviado varias consultas. Espera 15 minutos para volver a intentarlo.');
+    const stamp=new Date().toISOString(),notes='Origen: formulario web de Getpes\nServicio: '+service+(message?'\nConsulta: '+message:'');
+    await db.batch([
+      db.prepare('INSERT OR IGNORE INTO companies(id,name,created_at) VALUES(?,?,?)').bind('getpes','GETPES',stamp),
+      db.prepare('INSERT OR IGNORE INTO leads(id,company_id,name,email,contact,industry,source,stage,value,follow_up,notes,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)').bind(id,'getpes',name,email,contact,industry,'Orgánico','Nuevos',0,'',notes,stamp,stamp),
+      db.prepare('INSERT OR IGNORE INTO lead_events(id,lead_id,type,detail,actor,occurred_at,created_at) VALUES(?,?,?,?,?,?,?)').bind(id+'-created',id,'Prospecto creado','Consulta recibida desde la web. Servicio: '+service+'. Etapa inicial: Nuevos.','Formulario web',stamp,stamp)
+    ]);
+    return json({ok:true});
+  }
   if(!user)fail(401,'Inicia sesión para continuar.');
   if(path==='/api/logout'&&req.method==='POST'){await run('DELETE FROM sessions WHERE token=?',await digest(token));return json({ok:true},200,{'set-cookie':cookie('',req,0)});}
   if(path==='/api/password'&&req.method==='POST'){

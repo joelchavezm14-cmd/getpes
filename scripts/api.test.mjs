@@ -1,4 +1,21 @@
 import test from 'node:test';import assert from 'node:assert/strict';import {api,hashPassword} from '../src/api.mjs';import {database} from './local-db.mjs';
+test('website intake saves once with automatic history and never accepts a target company',async()=>{
+ const DB=database(),env={DB};
+ const body={request_id:crypto.randomUUID(),name:'Consulta de prueba',email:'test@example.com',contact:'+51 999 999 999',industry:'Gastronomía',service:'video',message:'Necesito un video',company_id:'lgna',stage:'Ganados'};
+ const call=async(data=body,origin='https://test.local')=>api(new Request('https://test.local/api/contact',{method:'POST',headers:{origin,'content-type':'application/json'},body:JSON.stringify(data)}),env);
+ assert.equal((await call({...body,email:'invalid'})).status,400);
+ assert.equal((await call(body,'https://other.local')).status,403);
+ assert.equal((await call({...body,website:'spam'})).status,400);
+ assert.equal((await call()).status,200);
+ assert.equal((await call()).status,200);
+ const rows=(await DB.prepare('SELECT * FROM leads').all()).results;
+ assert.equal(rows.length,1);assert.equal(rows[0].company_id,'getpes');assert.equal(rows[0].stage,'Nuevos');assert.equal(rows[0].email,body.email);assert.equal(rows[0].industry,body.industry);assert.match(rows[0].notes,/Necesito un video/);
+ const events=(await DB.prepare('SELECT * FROM lead_events').all()).results;
+ assert.equal(events.length,1);assert.equal(events[0].actor,'Formulario web');
+ assert.equal((await api(new Request('https://test.local/api/data?company=getpes&month=2026-09'),env)).status,401);
+ for(let i=0;i<8;i++)assert.equal((await call()).status,200);
+ assert.equal((await call()).status,429);
+});
 test('authentication, company isolation, report visibility and CRUD',async()=>{
  const DB=database(),env={DB,BOOTSTRAP_ADMIN_HASH:await hashPassword('Temporary-admin-12345'),BOOTSTRAP_LGNA_HASH:await hashPassword('Temporary-client-12345')};
  async function call(path,body,cookie='',method){const r=await api(new Request('https://test.local'+path,{method:method||(body?'POST':'GET'),headers:{origin:'https://test.local','content-type':'application/json',cookie},body:body?JSON.stringify(body):undefined}),env);return {status:r.status,data:await r.json(),cookie:r.headers.get('set-cookie')?.split(';')[0]||''};}
