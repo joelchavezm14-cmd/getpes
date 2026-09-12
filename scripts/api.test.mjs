@@ -1,0 +1,31 @@
+import test from 'node:test';import assert from 'node:assert/strict';import {api,hashPassword} from '../src/api.mjs';import {database} from './local-db.mjs';
+test('authentication, company isolation, report visibility and CRUD',async()=>{
+ const DB=database(),env={DB,BOOTSTRAP_ADMIN_HASH:await hashPassword('Temporary-admin-12345'),BOOTSTRAP_LGNA_HASH:await hashPassword('Temporary-client-12345')};
+ async function call(path,body,cookie='',method){const r=await api(new Request('https://test.local'+path,{method:method||(body?'POST':'GET'),headers:{origin:'https://test.local','content-type':'application/json',cookie},body:body?JSON.stringify(body):undefined}),env);return {status:r.status,data:await r.json(),cookie:r.headers.get('set-cookie')?.split(';')[0]||''};}
+ assert.equal((await call('/api/data?company=lgna&month=2026-09')).status,401);
+ let a=await call('/api/login',{username:'admin@getpes.com',password:'Temporary-admin-12345'});assert.equal(a.status,200);let ac=a.cookie;
+ assert.equal((await call('/api/companies',null,ac)).status,403);
+ assert.equal((await call('/api/password',{current:'Temporary-admin-12345',password:'New-admin-pass-56789'},ac)).status,200);
+ assert.equal((await call('/api/companies',null,ac)).status,401);
+ ac=(await call('/api/login',{username:'admin@getpes.com',password:'New-admin-pass-56789'})).cookie;
+ let c=await call('/api/login',{username:'lgna@getpes.com',password:'Temporary-client-12345'});await call('/api/password',{current:'Temporary-client-12345',password:'New-client-pass-56789'},c.cookie);const cc=(await call('/api/login',{username:'lgna@getpes.com',password:'New-client-pass-56789'})).cookie;
+ await call('/api/companies',{name:'Other company'},ac);const companies=(await call('/api/companies',null,ac)).data.companies,other=companies.find(c=>c.id!=='lgna').id;
+ assert.equal((await call('/api/data?company='+other+'&month=2026-09',null,cc)).status,403);
+ assert.equal((await call('/api/companies',null,cc)).data.companies.length,1);
+ const campaign={company_id:'lgna',month:'2026-09',name:'Test campaign',platform:'Meta Ads',objective:'Leads',spend:100,impressions:1000,clicks:100,leads:10,sales:2,revenue:500};
+ assert.equal((await call('/api/campaigns',campaign,cc)).status,403);assert.equal((await call('/api/campaigns',campaign,ac)).status,200);
+ assert.equal((await call('/api/campaigns',{...campaign,spend:-2},ac)).status,400);
+ const task={company_id:'lgna',title:'Grabación',date:'2026-09-15',type:'Grabación',status:'Pendiente',notes:'Details',url:''};
+ assert.equal((await call('/api/tasks',task,ac)).status,200);assert.equal((await call('/api/tasks',{...task,url:'javascript:alert(1)'},ac)).status,400);
+ let data=(await call('/api/data?company=lgna&month=2026-09',null,cc)).data;assert.equal(data.campaigns.length,1);assert.equal(data.tasks.length,1);
+ assert.equal((await call('/api/tasks',{...task,id:data.tasks[0].id,company_id:other},ac)).status,404);
+ const report={company_id:'lgna',month:'2026-09',title:'Monthly report',summary:'Results',next_steps:'Next',config:{campaigns:true,calendar:true,deliverables:false},published:false};
+ assert.equal((await call('/api/reports',report,ac)).status,200);assert.equal((await call('/api/data?company=lgna&month=2026-09',null,cc)).data.report,null);
+ await call('/api/reports',{...report,published:true},ac);assert.equal((await call('/api/data?company=lgna&month=2026-09',null,cc)).data.report.title,'Monthly report');
+ assert.equal((await call('/api/data?company=lgna&month=2026-10',null,cc)).data.campaigns.length,0);
+ const forged=await api(new Request('https://test.local/api/tasks',{method:'POST',headers:{origin:'https://evil.local','content-type':'application/json',cookie:ac},body:JSON.stringify(task)}),env);assert.equal(forged.status,403);
+ const created=await call('/api/users',{username:'reader@getpes.com',company_id:other},ac);assert.ok(created.data.password);assert.equal((await call('/api/users',null,cc)).status,403);
+ const reader=(await call('/api/users',null,ac)).data.users.find(x=>x.username==='reader@getpes.com');await call('/api/users',{action:'disable',id:reader.id},ac);assert.equal((await call('/api/login',{username:'reader@getpes.com',password:created.data.password})).status,401);
+ await call('/api/logout',{},cc);assert.equal((await call('/api/data?company=lgna&month=2026-09',null,cc)).status,401);
+ for(let i=0;i<11;i++)c=await call('/api/login',{username:'missing@getpes.com',password:'Wrong-password'});assert.equal(c.status,429);DB.close();
+});

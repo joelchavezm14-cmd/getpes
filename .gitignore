@@ -1,1 +1,5 @@
+node_modules/
 .sites-runtime/
+.local/
+.env
+dist/
