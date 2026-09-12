@@ -15,9 +15,14 @@ test('authentication, company isolation, report visibility and CRUD',async()=>{
  const campaign={company_id:'lgna',month:'2026-09',name:'Test campaign',platform:'Meta Ads',objective:'Leads',spend:100,impressions:1000,clicks:100,leads:10,sales:2,revenue:500};
  assert.equal((await call('/api/campaigns',campaign,cc)).status,403);assert.equal((await call('/api/campaigns',campaign,ac)).status,200);
  assert.equal((await call('/api/campaigns',{...campaign,spend:-2},ac)).status,400);
+ await call('/api/campaigns',{...campaign,platform:'Google Ads',spend:50,leads:5},ac);
+ await call('/api/campaigns',{...campaign,month:'2027-12',spend:80,leads:0},ac);
+ await call('/api/campaigns',{...campaign,company_id:other,spend:999},ac);
+ const comparison=(await call('/api/data?company=lgna&month=2026-09',null,cc)).data.comparison;
+ assert.deepEqual(comparison,[{month:'2026-09',entries:2,spend:150,leads:15},{month:'2027-12',entries:1,spend:80,leads:0}]);
  const task={company_id:'lgna',title:'Grabación',date:'2026-09-15',type:'Grabación',status:'Pendiente',notes:'Details',url:''};
  assert.equal((await call('/api/tasks',task,ac)).status,200);assert.equal((await call('/api/tasks',{...task,url:'javascript:alert(1)'},ac)).status,400);
- let data=(await call('/api/data?company=lgna&month=2026-09',null,cc)).data;assert.equal(data.campaigns.length,1);assert.equal(data.tasks.length,1);
+ let data=(await call('/api/data?company=lgna&month=2026-09',null,cc)).data;assert.equal(data.campaigns.length,2);assert.equal(data.tasks.length,1);
  assert.equal((await call('/api/tasks',{...task,id:data.tasks[0].id,company_id:other},ac)).status,404);
  const report={company_id:'lgna',month:'2026-09',title:'Monthly report',summary:'Results',next_steps:'Next',config:{campaigns:true,calendar:true,deliverables:false},published:false};
  assert.equal((await call('/api/reports',report,ac)).status,200);assert.equal((await call('/api/data?company=lgna&month=2026-09',null,cc)).data.report,null);
