@@ -1,8 +1,10 @@
 import { api } from './api.mjs';
 import { assets } from './assets.mjs';
+import { media } from './media.mjs';
 export default {async fetch(request,env){
  let path;try{path=decodeURIComponent(new URL(request.url).pathname);}catch{return new Response('Ruta inválida',{status:400});}
  if(path.startsWith('/api/'))return api(request,env);
+ if(path.startsWith('/media/'))return media(request,env);
  const alias=path==='/'?'/index.html':path==='/gestion-getpes'?'/admin.html':path==='/dashboard'?'/dashboard.html':path;
  const asset=assets[alias];
  if(!asset||!['GET','HEAD'].includes(request.method))return new Response('No encontrado',{status:404});

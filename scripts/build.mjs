@@ -12,6 +12,7 @@ await walk('public');
 fs.mkdirSync('dist/server',{recursive:true});fs.mkdirSync('dist/.openai',{recursive:true});
 fs.writeFileSync('dist/server/assets.mjs','export const assets='+JSON.stringify(assets)+';');
 fs.copyFileSync('src/api.mjs','dist/server/api.mjs');fs.copyFileSync('src/worker.mjs','dist/server/index.js');
+fs.copyFileSync('src/media.mjs','dist/server/media.mjs');
 fs.copyFileSync('.openai/hosting.json','dist/.openai/hosting.json');
 fs.cpSync('drizzle','dist/.openai/drizzle',{recursive:true});
 console.log('Portal and '+Object.keys(assets).length+' public assets built.');
