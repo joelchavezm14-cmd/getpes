@@ -124,6 +124,8 @@ const SERVICE_LABELS = {
 function initContactForm() {
   const form = document.getElementById('contact-form');
   if (!form) return;
+  const selectedService = new URLSearchParams(location.search).get('servicio');
+  if (Object.hasOwn(SERVICE_LABELS, selectedService)) form.querySelector('#service').value = selectedService;
   const status = document.getElementById('form-status');
 
   let requestId = crypto.randomUUID();
