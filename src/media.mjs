@@ -1,6 +1,9 @@
 const files={
  'marketing.mp4':{size:56910157,sha256:'569f06f6d8280a36d24a094341a3368edc4fa42bd7047e135e415b5020aef187'},
- 'arizema.mp4':{size:52166014,sha256:'9edee6bed93837ebc721e0736695015a7fab1edb831cc034b3de1fc55d27526d'}
+ 'alejandra-56ffa174.mp4':{size:50673002,sha256:'56ffa1744f9acd4e99c4cb795bac3df9623980db14d491f232d33bd4bdeef1e1'},
+ 'momentos-b1419dbd.mp4':{size:67653469,sha256:'b1419dbdfc24f4784ef9163214f3c4a0c460b410ebcaaf4af75cda6afa1e9ae4'},
+ 'habibis-8f2f4875.mp4':{size:6861838,sha256:'8f2f4875068ec539a3337d2a6640041e46b5a7ec5e6912abcc59673906d98e6f'},
+ 'meses-59f537b7.mp4':{size:3336042,sha256:'59f537b7b29d20c52ae3a9578275fdb3a34ce892c82741de6c9ef2b28e32ad27'}
 };
 export async function media(request,env){
  const name=new URL(request.url).pathname.split('/').pop(),file=files[name];
@@ -9,7 +12,7 @@ export async function media(request,env){
  const key='portfolio/'+name;
  try{
   if(request.method==='PUT'){
-   // Temporary import accepts only these two exact, owner-supplied files.
+   // Temporary import accepts only the exact owner-supplied selection.
    if(!env.MEDIA_IMPORT_TOKEN||request.headers.get('authorization')!=='Bearer '+env.MEDIA_IMPORT_TOKEN)return new Response('No autorizado',{status:403});
    if(Number(request.headers.get('content-length'))!==file.size)return new Response('Tamaño incorrecto',{status:400});
    await env.BUCKET.put(key,request.body,{sha256:file.sha256,httpMetadata:{contentType:'video/mp4'}});
