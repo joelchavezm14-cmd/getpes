@@ -32,6 +32,15 @@ test('authentication, company isolation, report visibility and CRUD',async()=>{
  const campaign={company_id:'lgna',month:'2026-09',name:'Test campaign',platform:'Meta Ads',objective:'Leads',spend:100,impressions:1000,clicks:100,leads:10,sales:2,revenue:500};
  assert.equal((await call('/api/campaigns',campaign,cc)).status,403);assert.equal((await call('/api/campaigns',campaign,ac)).status,200);
  assert.equal((await call('/api/campaigns',{...campaign,spend:-2},ac)).status,400);
+ const metric={company_id:'lgna',month:'2026-09',key:'meetings',value:12};
+ assert.equal((await call('/api/campaign-metrics',metric,cc)).status,403);
+ assert.equal((await call('/api/campaign-metrics',{...metric,value:-1},ac)).status,400);
+ assert.equal((await call('/api/campaign-metrics',metric,ac)).status,200);
+ assert.equal((await call('/api/data?company=lgna&month=2026-09',null,cc)).data.campaignMetrics.meetings,12);
+ assert.equal((await call('/api/data?company=lgna&month=2026-10',null,cc)).data.campaignMetrics,null);
+ assert.equal((await call('/api/data?company='+other+'&month=2026-09',null,ac)).data.campaignMetrics,null);
+ assert.equal((await call('/api/campaign-metrics',{...metric,value:null},ac)).status,200);
+ assert.equal((await call('/api/data?company=lgna&month=2026-09',null,cc)).data.campaignMetrics.meetings,null);
  await call('/api/campaigns',{...campaign,platform:'Google Ads',spend:50,leads:5},ac);
  await call('/api/campaigns',{...campaign,month:'2027-12',spend:80,leads:0},ac);
  await call('/api/campaigns',{...campaign,company_id:other,spend:999},ac);

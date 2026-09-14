@@ -99,9 +99,15 @@ export async function api(req,env) {
     const id=await company(url.searchParams.get('company')),m=month(url.searchParams.get('month'));
     const report=await one('SELECT * FROM reports WHERE company_id=? AND month=?'+(user.role==='admin'?'':' AND published=1'),id,m);
     const comparison=await all('SELECT month,COUNT(*) AS entries,SUM(spend) AS spend,SUM(leads) AS leads FROM campaigns WHERE company_id=? AND month>=? AND month<=? GROUP BY month ORDER BY month',id,'2026-09','2027-12');
-    return json({pipelineCampaigns:await all('SELECT id,name,month,platform FROM campaigns WHERE company_id=? ORDER BY month DESC,name',id),leads:await all('SELECT * FROM leads WHERE company_id=? ORDER BY updated_at DESC',id),comparison,campaigns:await all('SELECT * FROM campaigns WHERE company_id=? AND month=? ORDER BY name',id,m),tasks:await all('SELECT * FROM tasks WHERE company_id=? AND date>=? AND date<=? ORDER BY date,title',id,m+'-01',m+'-31'),report:report?{...report,config:JSON.parse(report.config)}:null});
+    return json({campaignMetrics:await one('SELECT * FROM campaign_metrics WHERE company_id=? AND month=?',id,m),pipelineCampaigns:await all('SELECT id,name,month,platform FROM campaigns WHERE company_id=? ORDER BY month DESC,name',id),leads:await all('SELECT * FROM leads WHERE company_id=? ORDER BY updated_at DESC',id),comparison,campaigns:await all('SELECT * FROM campaigns WHERE company_id=? AND month=? ORDER BY name',id,m),tasks:await all('SELECT * FROM tasks WHERE company_id=? AND date>=? AND date<=? ORDER BY date,title',id,m+'-01',m+'-31'),report:report?{...report,config:JSON.parse(report.config)}:null});
+  }
+  if(path==='/api/campaign-metrics'&&write){
+    admin();if(req.method!=='POST')fail(405,'Método no permitido.');const cid=await company(body.company_id),m=month(body.month),key=choice(body.key,['leads','revenue','meetings','sales']);
+    const value=body.value===null?null:number(body.value,key!=='revenue');
+    await run(`INSERT INTO campaign_metrics(id,company_id,month,${key}) VALUES(?,?,?,?) ON CONFLICT(company_id,month) DO UPDATE SET ${key}=excluded.${key}`,crypto.randomUUID(),cid,m,value);return json({ok:true});
   }
   if(path==='/api/lead-events'){
+
     const cid=await company(write?body.company_id:url.searchParams.get('company')),lid=text(write?body.lead_id:url.searchParams.get('lead'),100);
     if(!await one('SELECT id FROM leads WHERE id=? AND company_id=?',lid,cid))fail(404,'Prospecto no encontrado.');
     if(req.method==='GET')return json({events:await all('SELECT * FROM lead_events WHERE lead_id=? ORDER BY occurred_at DESC,created_at DESC',lid)});
@@ -133,9 +139,9 @@ export async function api(req,env) {
     if(req.method!=='POST')fail(405,'Método no permitido.');
     if(body.id&&!await one(`SELECT id FROM ${table} WHERE id=? AND company_id=?`,id,cid))fail(404,'Registro no encontrado.');
     if(table==='campaigns'){
-      const fields=['month','name','platform','objective','spend','impressions','clicks','leads','sales','revenue','notes'];
-      const values=[month(body.month),text(body.name,150),choice(body.platform,['Meta Ads','Google Ads']),text(body.objective,150),number(body.spend),number(body.impressions,true),number(body.clicks,true),number(body.leads,true),number(body.sales,true),number(body.revenue),text(body.notes||'',3000,false)];
-      await run(`INSERT INTO campaigns(id,company_id,${fields.join(',')}) VALUES(${Array(13).fill('?').join(',')}) ON CONFLICT(id) DO UPDATE SET ${fields.map(f=>`${f}=excluded.${f}`).join(',')}`,id,cid,...values);
+      const fields=['month','name','platform','objective','spend','impressions','clicks','leads','sales','revenue','notes','audience','days','daily_budget','frequency'];
+      const values=[month(body.month),text(body.name,150),choice(body.platform,['Meta Ads','Google Ads']),text(body.objective,150),number(body.spend),number(body.impressions,true),number(body.clicks,true),number(body.leads,true),number(body.sales,true),number(body.revenue),text(body.notes||'',3000,false),text(body.audience||'',300,false),number(body.days||0,true),number(body.daily_budget||0),number(body.frequency||0)];
+      await run(`INSERT INTO campaigns(id,company_id,${fields.join(',')}) VALUES(${Array(fields.length+2).fill('?').join(',')}) ON CONFLICT(id) DO UPDATE SET ${fields.map(f=>`${f}=excluded.${f}`).join(',')}`,id,cid,...values);
     } else if(table==='tasks'){
       const fields=['date','title','type','status','notes','url'],values=[date(body.date),text(body.title,180),choice(body.type,['Grabación','Video editado','Video publicado','Diseño','Reunión','Otra actividad']),choice(body.status,['Pendiente','En proceso','En revisión','Completado']),text(body.notes||'',3000,false),safeUrl(body.url)];
       await run(`INSERT INTO tasks(id,company_id,${fields.join(',')}) VALUES(${Array(8).fill('?').join(',')}) ON CONFLICT(id) DO UPDATE SET ${fields.map(f=>`${f}=excluded.${f}`).join(',')}`,id,cid,...values);
