@@ -49,7 +49,7 @@ test('authentication, company isolation, report visibility and CRUD',async()=>{
  await call('/api/campaigns',{...campaign,month:'2027-12',spend:80,leads:0},ac);
  await call('/api/campaigns',{...campaign,company_id:other,spend:999},ac);
  const comparison=(await call('/api/data?company=lgna&month=2026-09',null,cc)).data.comparison;
- assert.deepEqual(comparison,[{month:'2026-09',entries:2,spend:150,leads:15},{month:'2027-12',entries:1,spend:80,leads:0}]);
+ assert.deepEqual(comparison,[{month:'2026-09',entries:2,spend:150,leads:15,revenue:1000},{month:'2027-12',entries:1,spend:80,leads:0,revenue:500}]);
  const task={company_id:'lgna',title:'Grabación',date:'2026-09-15',type:'Grabación',status:'Pendiente',notes:'Details',url:''};
  const prospect={company_id:'lgna',name:'Prospecto de prueba',contact:'test@example.com',stage:'Nuevos',source:'Referido',value:250,follow_up:'2027-01-05',notes:'Test'};
  assert.equal((await call('/api/leads',prospect,cc)).status,403);

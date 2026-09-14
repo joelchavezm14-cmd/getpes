@@ -103,7 +103,9 @@ export async function api(req,env) {
   if(path==='/api/data'&&req.method==='GET'){
     const id=await company(url.searchParams.get('company')),m=month(url.searchParams.get('month'));
     const report=await one('SELECT * FROM reports WHERE company_id=? AND month=?'+(user.role==='admin'?'':' AND published=1'),id,m);
-    const comparison=await all('SELECT month,COUNT(*) AS entries,SUM(spend) AS spend,SUM(leads) AS leads FROM campaigns WHERE company_id=? AND month>=? AND month<=? GROUP BY month ORDER BY month',id,'2026-09','2027-12');
+    const comparison=await all('SELECT month,COUNT(*) AS entries,SUM(spend) AS spend,SUM(leads) AS leads,SUM(revenue) AS revenue FROM campaigns WHERE company_id=? AND month>=? AND month<=? GROUP BY month ORDER BY month',id,'2026-09','2027-12');
+    const overrides=await all('SELECT month,leads,revenue FROM campaign_metrics WHERE company_id=? AND month>=? AND month<=?',id,'2026-09','2027-12');
+    for(const o of overrides){let r=comparison.find(r=>r.month===o.month);if(!r&&(o.leads!==null||o.revenue!==null)){r={month:o.month,entries:1,spend:0,leads:0,revenue:0};comparison.push(r);}if(r){if(o.leads!==null)r.leads=o.leads;if(o.revenue!==null)r.revenue=o.revenue;}}
     return json({companySettings:await one('SELECT show_meetings FROM companies WHERE id=?',id),campaignMetrics:await one('SELECT * FROM campaign_metrics WHERE company_id=? AND month=?',id,m),pipelineCampaigns:await all('SELECT id,name,month,platform FROM campaigns WHERE company_id=? ORDER BY month DESC,name',id),leads:await all('SELECT * FROM leads WHERE company_id=? ORDER BY updated_at DESC',id),comparison,campaigns:await all('SELECT * FROM campaigns WHERE company_id=? AND month=? ORDER BY name',id,m),tasks:await all('SELECT * FROM tasks WHERE company_id=? AND date>=? AND date<=? ORDER BY date,title',id,m+'-01',m+'-31'),report:report?{...report,config:JSON.parse(report.config)}:null});
   }
   if(path==='/api/campaign-metrics'&&write){
