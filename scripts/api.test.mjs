@@ -33,6 +33,16 @@ test('authentication, company isolation, report visibility and CRUD',async()=>{
  assert.equal((await call('/api/campaigns',campaign,cc)).status,403);assert.equal((await call('/api/campaigns',campaign,ac)).status,200);
  assert.equal((await call('/api/campaigns',{...campaign,spend:-2},ac)).status,400);
  const metric={company_id:'lgna',month:'2026-09',key:'meetings',value:12};
+ assert.equal((await call('/api/appearance',{scope:'company',company_id:'lgna',theme:'blue'},cc)).status,403);
+ assert.equal((await call('/api/appearance',{scope:'company',company_id:'lgna',theme:'blue'},ac)).status,200);
+ assert.equal((await call('/api/appearance',{scope:'personal',theme:'red'},cc)).status,200);
+ assert.equal((await call('/api/session',null,cc)).data.user.theme,'red');
+ assert.equal((await call('/api/session',null,ac)).data.user.theme,null);
+ assert.equal((await call('/api/data?company=lgna&month=2026-09',null,cc)).data.companySettings.theme,'blue');
+ assert.equal((await call('/api/data?company='+other+'&month=2026-09',null,ac)).data.companySettings.theme,'getpes');
+ assert.equal((await call('/api/appearance',{scope:'personal',theme:'invalid'},cc)).status,400);
+ assert.equal((await call('/api/appearance',{scope:'personal',theme:null},cc)).status,200);
+ assert.equal((await call('/api/session',null,cc)).data.user.theme,null);
  assert.equal((await call('/api/company-settings',{company_id:'lgna',show_meetings:false},cc)).status,403);
  assert.equal((await call('/api/company-settings',{company_id:'lgna',show_meetings:false},ac)).status,200);
  assert.equal((await call('/api/data?company=lgna&month=2026-10',null,cc)).data.companySettings.show_meetings,0);
