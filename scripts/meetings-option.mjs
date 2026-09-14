@@ -1,0 +1,13 @@
+import fs from 'node:fs';
+const edit=(p,f)=>fs.writeFileSync(p,f(fs.readFileSync(p,'utf8')));
+edit('db/schema.ts',s=>s.replace("export const companies = sqliteTable('companies',{","export const companies = sqliteTable('companies',{showMeetings:integer('show_meetings').notNull().default(1),"));
+edit('src/api.mjs',s=>s.replace("  if(path==='/api/companies'){",`  if(path==='/api/company-settings'&&write){
+    admin();if(req.method!=='POST')fail(405,'Método no permitido.');const cid=await company(body.company_id);
+    if(typeof body.show_meetings!=='boolean')fail(400,'Configuración no válida.');
+    await run('UPDATE companies SET show_meetings=? WHERE id=?',body.show_meetings?1:0,cid);return json({ok:true});
+  }
+  if(path==='/api/companies'){`).replace('return json({campaignMetrics:',"return json({companySettings:await one('SELECT show_meetings FROM companies WHERE id=?',id),campaignMetrics:"));
+edit('public/js/campaign-view.js',s=>s.replace('const t=campaignValues(),ratio=', 'const t=campaignValues(),showMeetings=state.data.companySettings?.show_meetings!==0,ratio=').replace('Math.max(t.leads,t.meetings,t.sales,1)','Math.max(t.leads,showMeetings?t.meetings:0,t.sales,1)').replace('<div class="metric-legend"><span>🟩', '${isAdmin()?`<label class="meetings-setting"><input type="checkbox" id="show-meetings" ${showMeetings?\'checked\':\'\'}> Mostrar Reuniones para esta empresa</label>`:\'\'}<div class="metric-legend"><span>🟩').replace('${cards.map(',"${cards.filter(c=>showMeetings||c[3]!=='meetings').map(").replace('Leads → Reuniones → Clientes finales',"${showMeetings?'Leads → Reuniones → Clientes finales':'Leads → Clientes finales'}").replace('<span class="pink-dot">Reuniones</span>', '${showMeetings?\'<span class="pink-dot">Reuniones</span>\':\'\'}').replace("['Clientes',t.sales,'#ace829']].map(","['Clientes',t.sales,'#ace829']].filter(c=>showMeetings||c[0]!=='Reuniones').map("));
+edit('public/js/portal.js',s=>s.replace(" document.querySelectorAll('[data-metric]')",` $('#show-meetings')?.addEventListener('change',async e=>{const input=e.target;input.disabled=true;try{await request('/api/company-settings',{company_id:state.company,show_meetings:input.checked});await load();toast('Preferencia guardada para esta empresa.');}catch(err){input.checked=!input.checked;message(err);}finally{input.disabled=false;}});
+ document.querySelectorAll('[data-metric]')`));
+edit('public/css/campaign-view.css',s=>s.replace('font-size:clamp(18px,1.6vw,28px);font-weight:500;color:#fafafa','font-size:clamp(26px,2vw,34px);font-weight:800;color:var(--lime)')+'\n.meetings-setting{display:flex;align-items:center;gap:10px;margin-top:22px;font-size:14px}.meetings-setting input{width:18px;height:18px;min-height:18px;accent-color:var(--lime)}\n');
