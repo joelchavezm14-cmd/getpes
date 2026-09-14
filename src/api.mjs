@@ -81,6 +81,11 @@ export async function api(req,env) {
   if(user.must_change)fail(403,'Cambia tu contraseña temporal para continuar.');
   const admin=()=>{if(user.role!=='admin')fail(403,'Solo el administrador puede modificar información.');};
   const company=async id=>{text(id,100);if(user.role!=='admin'&&user.company_id!==id)fail(403,'No tienes acceso a esta empresa.');if(!await one('SELECT id FROM companies WHERE id=?',id))fail(404,'Empresa no encontrada.');return id;};
+  if(path==='/api/company-settings'&&write){
+    admin();if(req.method!=='POST')fail(405,'Método no permitido.');const cid=await company(body.company_id);
+    if(typeof body.show_meetings!=='boolean')fail(400,'Configuración no válida.');
+    await run('UPDATE companies SET show_meetings=? WHERE id=?',body.show_meetings?1:0,cid);return json({ok:true});
+  }
   if(path==='/api/companies'){
     if(req.method==='GET')return json({companies:user.role==='admin'?await all('SELECT * FROM companies ORDER BY name'):await all('SELECT * FROM companies WHERE id=?',user.company_id)});
     if(req.method==='POST'){admin();await run('INSERT INTO companies(id,name,created_at) VALUES(?,?,?)',crypto.randomUUID(),text(body.name,120),new Date().toISOString());return json({ok:true});}
@@ -99,7 +104,7 @@ export async function api(req,env) {
     const id=await company(url.searchParams.get('company')),m=month(url.searchParams.get('month'));
     const report=await one('SELECT * FROM reports WHERE company_id=? AND month=?'+(user.role==='admin'?'':' AND published=1'),id,m);
     const comparison=await all('SELECT month,COUNT(*) AS entries,SUM(spend) AS spend,SUM(leads) AS leads FROM campaigns WHERE company_id=? AND month>=? AND month<=? GROUP BY month ORDER BY month',id,'2026-09','2027-12');
-    return json({campaignMetrics:await one('SELECT * FROM campaign_metrics WHERE company_id=? AND month=?',id,m),pipelineCampaigns:await all('SELECT id,name,month,platform FROM campaigns WHERE company_id=? ORDER BY month DESC,name',id),leads:await all('SELECT * FROM leads WHERE company_id=? ORDER BY updated_at DESC',id),comparison,campaigns:await all('SELECT * FROM campaigns WHERE company_id=? AND month=? ORDER BY name',id,m),tasks:await all('SELECT * FROM tasks WHERE company_id=? AND date>=? AND date<=? ORDER BY date,title',id,m+'-01',m+'-31'),report:report?{...report,config:JSON.parse(report.config)}:null});
+    return json({companySettings:await one('SELECT show_meetings FROM companies WHERE id=?',id),campaignMetrics:await one('SELECT * FROM campaign_metrics WHERE company_id=? AND month=?',id,m),pipelineCampaigns:await all('SELECT id,name,month,platform FROM campaigns WHERE company_id=? ORDER BY month DESC,name',id),leads:await all('SELECT * FROM leads WHERE company_id=? ORDER BY updated_at DESC',id),comparison,campaigns:await all('SELECT * FROM campaigns WHERE company_id=? AND month=? ORDER BY name',id,m),tasks:await all('SELECT * FROM tasks WHERE company_id=? AND date>=? AND date<=? ORDER BY date,title',id,m+'-01',m+'-31'),report:report?{...report,config:JSON.parse(report.config)}:null});
   }
   if(path==='/api/campaign-metrics'&&write){
     admin();if(req.method!=='POST')fail(405,'Método no permitido.');const cid=await company(body.company_id),m=month(body.month),key=choice(body.key,['leads','revenue','meetings','sales']);
