@@ -11,7 +11,10 @@ await walk('public');
 // Only the explicitly generated server folder is replaced. Authored public assets remain untouched.
 fs.mkdirSync('dist/server',{recursive:true});fs.mkdirSync('dist/.openai',{recursive:true});
 fs.writeFileSync('dist/server/assets.mjs','export const assets='+JSON.stringify(assets)+';');
+fs.copyFileSync('src/social.mjs','dist/server/social.mjs');
 fs.copyFileSync('src/api.mjs','dist/server/api.mjs');fs.copyFileSync('src/worker.mjs','dist/server/index.js');
+fs.copyFileSync('src/permissions.mjs','dist/server/permissions.mjs');fs.copyFileSync('src/accounts.mjs','dist/server/accounts.mjs');
+fs.copyFileSync('src/dashboard-preferences.mjs','dist/server/dashboard-preferences.mjs');
 fs.copyFileSync('src/media.mjs','dist/server/media.mjs');
 fs.copyFileSync('.openai/hosting.json','dist/.openai/hosting.json');
 fs.cpSync('drizzle','dist/.openai/drizzle',{recursive:true});

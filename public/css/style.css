@@ -981,3 +981,42 @@ form,.contact-grid>*{min-width:0}
 .campaign-hero .hero-slide-work{background-size:cover;background-position:center}
 .campaign-hero:has(.hero-slide-work.is-active) .hero-slider::after{background:linear-gradient(90deg,rgba(9,9,9,.97) 10%,rgba(9,9,9,.85) 40%,rgba(9,9,9,.1) 85%)}
 @media(max-width:860px){.campaign-hero .hero-slide-work{background-size:auto 470px;background-position:right bottom}.campaign-hero:has(.hero-slide-work.is-active) .hero-slider::after{background:linear-gradient(180deg,#090909 35%,rgba(9,9,9,.85) 54%,rgba(9,9,9,.08) 85%)}}
+
+.hero:has([data-hero-slider]){touch-action:pan-y pinch-zoom}
+@media(min-width:761px){.hero .hero-slider-arrow{top:50%;bottom:auto;transform:translateY(-50%)}.hero .hero-slider-arrow:hover{transform:translateY(-50%)}.hero .hero-slider-prev{left:24px;right:auto}.hero .hero-slider-next{right:24px;left:auto}}
+
+.services-controls{display:flex;justify-content:flex-end;gap:10px;margin-bottom:16px}.services-controls button{width:44px;height:44px;border:1px solid var(--line);border-radius:50%;background:#11150e;color:var(--lime);font-size:26px;cursor:pointer}.services-controls button:disabled{opacity:.3;cursor:default}#servicios .services-carousel{display:flex;gap:24px;overflow-x:auto;scroll-snap-type:x mandatory;overscroll-behavior-x:contain;padding-bottom:16px;scrollbar-width:thin;scrollbar-color:#84b82d #ffffff0a}#servicios .services-carousel>.service-card{flex:0 0 calc((100% - 24px)/2);min-width:0;scroll-snap-align:start;scroll-snap-stop:always}.services-carousel:focus-visible{outline:2px solid var(--lime);outline-offset:5px}@media(max-width:760px){#servicios .services-carousel{gap:16px}#servicios .services-carousel>.service-card{flex-basis:100%}}
+
+#servicios .services-carousel{scrollbar-width:none;-ms-overflow-style:none;scroll-behavior:smooth;cursor:grab}#servicios .services-carousel::-webkit-scrollbar{display:none}#servicios .services-carousel.is-dragging{scroll-behavior:auto;scroll-snap-type:none;cursor:grabbing;user-select:none}@media(prefers-reduced-motion:reduce){#servicios .services-carousel{scroll-behavior:auto}}
+
+#servicios .services-carousel.services-auto-moving{scroll-snap-type:none;scroll-behavior:auto}.services-controls .services-pause{width:auto;padding:0 16px;font-size:13px;border-radius:24px}
+
+.services-shell{position:relative}.services-shell .services-controls{position:absolute;inset:0 -58px;display:flex;justify-content:space-between;align-items:center;margin:0;pointer-events:none;z-index:2}.services-shell .services-controls button{pointer-events:auto;background:#10140d;flex:0 0 44px}.services-shell #services-track{scroll-snap-type:none;scroll-behavior:auto;overflow-anchor:none;padding-bottom:0}.services-shell .service-card{user-select:none}@media(max-width:1300px){.services-shell{margin-inline:22px}.services-shell .services-controls{left:-48px;right:-48px}}@media(max-width:760px){.services-shell{margin-inline:12px}.services-shell .services-controls{left:-30px;right:-30px}.services-shell .services-controls button{width:36px;height:44px;flex-basis:36px}}
+
+/* Keep each service identity throughout the continuous loop. */
+#services-track [data-service="1"]{--service-accent:var(--lime)}
+#services-track [data-service="2"]{--service-accent:var(--pink)}
+#services-track [data-service="3"]{--service-accent:var(--blue)}
+#services-track [data-service="4"]{--service-accent:#ffc65c}
+#services-track .service-card .num,#services-track .service-card li::before{background:var(--service-accent)}
+#services-track .service-card:hover{border-color:var(--service-accent);transform:none}
+/* Let cards travel all the way to the screen edges, without an inset black cut. */
+#servicios .services-shell #services-track{width:100vw;max-width:none;margin-left:calc(-1 * var(--service-gutter,0px));padding:8px var(--service-gutter,0px);mask-image:none;-webkit-mask-image:none}
+#servicios .services-carousel>.service-card{flex-basis:var(--service-width)}
+
+/* Compact service cards on phones; desktop sizing stays unchanged. */
+@media(max-width:760px){
+ #servicios #services-track>.service-card{padding:20px;gap:12px;min-height:0;border-radius:14px}
+ #servicios #services-track .service-card .num{width:32px;height:32px;border-radius:7px;font-size:.875rem;flex-shrink:0}
+ #servicios #services-track .service-card h3{font-size:1.25rem;line-height:1.25}
+ #servicios #services-track .service-card p,
+ #servicios #services-track .service-card li{font-size:.875rem!important;line-height:1.5}
+ #servicios #services-track .service-card ul{gap:6px}
+ #servicios #services-track .service-card li{padding-left:12px}
+ #servicios #services-track .service-card li::before{top:10px;width:5px}
+}
+
+/* Fill project covers on desktop without letterbox bands. */
+@media(min-width:761px){.project-showcase .project-grid .portfolio-thumb{overflow:hidden}.project-showcase .project-grid .portfolio-thumb img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center}.project-showcase .project-grid .portfolio-thumb .tag{z-index:1}}
+
+.campaign-hero .hero-slider-dots{left:auto;right:max(28px,calc((100% - var(--wrap))/2 + 28px))}@media(max-width:760px){.campaign-hero .hero-slider-dots{left:auto;right:24px}}

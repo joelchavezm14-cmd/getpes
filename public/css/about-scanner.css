@@ -1,0 +1,20 @@
+/* The scanner reveals the next Getpes role along the same moving edge. */
+.about-hero-visual.mascot-scanner{background:radial-gradient(ellipse at 50% 38%,rgba(162,228,46,.13),transparent 64%),#0c110e;min-height:540px}
+.mascot-scanner::after{background:linear-gradient(0deg,rgba(10,10,10,.9),transparent 28%)}
+.mascot-scanner .visual-grid{opacity:.12}
+.mascot-stage{position:absolute;inset:32px 18px 124px;z-index:3}
+.mascot-role{position:absolute;inset:0;width:100%;height:100%;overflow:hidden;filter:drop-shadow(0 14px 18px rgba(0,0,0,.3));pointer-events:none}
+.mascot-role:not(:first-of-type){visibility:hidden}
+.mascot-scanner .visual-scan{animation:none;transform:none;top:0;z-index:5;height:2px;opacity:0;pointer-events:none;background:linear-gradient(90deg,transparent,var(--lime) 16%,#e2ffb3 50%,var(--lime) 84%,transparent);box-shadow:0 0 14px 2px rgba(162,228,46,.7)}
+.mascot-scanner figcaption{gap:10px}
+.mascot-scanner figcaption b{max-width:16ch;font-size:clamp(1.35rem,2.4vw,2rem)}
+.mascot-scanner figcaption small{color:var(--lime);font-size:.8rem;letter-spacing:.04em}
+@media(max-width:900px){.about-hero-visual.mascot-scanner{height:460px;min-height:460px}.mascot-stage{inset:24px 24px 110px}}
+@media(max-width:620px){.about-hero-visual.mascot-scanner{height:400px;min-height:400px}.mascot-stage{inset:22px 12px 104px}}
+@media(prefers-reduced-motion:reduce){.mascot-scanner .visual-scan{display:none}}
+/* Mobile labels occupy their own row instead of a narrow index column. */
+@media(max-width:620px){
+  .values-list .value-row{grid-template-columns:minmax(0,1fr);gap:10px}
+  .values-list .value-row .idx{font-size:1rem;line-height:1.4}
+  .values-list .value-row > div{min-width:0}
+}

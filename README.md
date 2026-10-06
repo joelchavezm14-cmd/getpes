@@ -1,2 +1,0 @@
-# getpes
-Proyecto getpes 

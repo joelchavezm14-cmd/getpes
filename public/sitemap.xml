@@ -12,20 +12,15 @@
     <loc>https://www.getpes.com/portafolio.html</loc>
     <priority>0.8</priority>
   </url>
-  <url>
-    <loc>https://www.getpes.com/portafolio-redes.html</loc>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://www.getpes.com/portafolio-video.html</loc>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://www.getpes.com/portafolio-campanas.html</loc>
-    <priority>0.7</priority>
-  </url>
+  
+  
+  
   <url>
     <loc>https://www.getpes.com/contacto.html</loc>
     <priority>0.8</priority>
   </url>
-</urlset>
+  <url><loc>https://www.getpes.com/blog.html</loc><lastmod>2026-10-04</lastmod></url>
+  <url><loc>https://www.getpes.com/blog-medidas-instagram-2026.html</loc><lastmod>2026-10-04</lastmod></url>
+  <url><loc>https://www.getpes.com/blog-preparar-campana-publicidad-digital.html</loc><lastmod>2026-10-04</lastmod></url>
+  <url><loc>https://www.getpes.com/blog-identidad-visual-marca.html</loc><lastmod>2026-10-04</lastmod></url>
+<url><loc>https://www.getpes.com/blog-redes-sociales-para-mi-negocio.html</loc><lastmod>2026-10-04</lastmod></url><url><loc>https://www.getpes.com/blog-compartir-fotos-videos-sin-perder-calidad.html</loc><lastmod>2026-10-05</lastmod></url></urlset>

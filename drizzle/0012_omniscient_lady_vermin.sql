@@ -1,0 +1,1 @@
+ALTER TABLE `tasks` ADD `end_time` text DEFAULT '' NOT NULL;

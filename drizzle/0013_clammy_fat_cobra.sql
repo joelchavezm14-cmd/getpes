@@ -1,0 +1,1 @@
+ALTER TABLE `tasks` ADD `subtype` text DEFAULT '' NOT NULL;

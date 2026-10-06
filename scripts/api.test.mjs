@@ -32,6 +32,15 @@ test('authentication, company isolation, report visibility and CRUD',async()=>{
  const campaign={company_id:'lgna',month:'2026-09',name:'Test campaign',platform:'Meta Ads',objective:'Leads',spend:100,impressions:1000,clicks:100,leads:10,sales:2,revenue:500};
  assert.equal((await call('/api/campaigns',campaign,cc)).status,403);assert.equal((await call('/api/campaigns',campaign,ac)).status,200);
  assert.equal((await call('/api/campaigns',{...campaign,spend:-2},ac)).status,400);
+ const campaignId=(await call('/api/data?company=lgna&month=2026-09',null,ac)).data.campaigns[0].id;
+ assert.equal((await call('/api/campaigns',{...campaign,id:campaignId,meetings:3.5},ac)).status,400);
+ assert.equal((await call('/api/campaigns',{...campaign,id:campaignId,meetings:4},ac)).status,200);
+ assert.equal((await call('/api/campaigns',{...campaign,id:campaignId},ac)).status,200);
+ const meetingData=(await call('/api/data?company=lgna&month=2026-09',null,cc)).data;
+ assert.equal(meetingData.campaigns[0].meetings,4);
+ assert.equal(meetingData.summary.meetings,4);
+ assert.equal(meetingData.trend.find(r=>r.month==='2026-09').meetings,4);
+
  const metric={company_id:'lgna',month:'2026-09',key:'meetings',value:12};
  assert.equal((await call('/api/appearance',{scope:'company',company_id:'lgna',theme:'blue'},cc)).status,403);
  assert.equal((await call('/api/appearance',{scope:'company',company_id:'lgna',theme:'blue'},ac)).status,200);
@@ -67,13 +76,14 @@ test('authentication, company isolation, report visibility and CRUD',async()=>{
  const emailProspect={...prospect,email:'ventas@example.com',industry:'Inmobiliaria'};
  assert.equal((await call('/api/leads',{...emailProspect,email:'correo-invalido'},ac)).status,400);
  let prospects=(await call('/api/data?company=lgna&month=2026-09',null,cc)).data.leads;assert.equal(prospects.length,1);const prospectId=prospects[0].id;
- assert.equal((await call('/api/leads',{...emailProspect,id:prospectId},ac)).status,200);
+ assert.equal((await call('/api/leads',{...emailProspect,id:prospectId,services:'Gestión de redes, Video',billing:'Mensual'},ac)).status,200);
  const savedProspect=(await call('/api/data?company=lgna&month=2026-09',null,cc)).data.leads[0];
  assert.equal(savedProspect.email,'ventas@example.com');assert.equal(savedProspect.industry,'Inmobiliaria');
  assert.equal((await call('/api/leads',{...prospect,id:prospectId,company_id:other},ac)).status,404);
  assert.equal((await call('/api/leads',{...prospect,id:prospectId,stage:'Invalid'},ac,'PATCH')).status,400);
  assert.equal((await call('/api/leads',{...prospect,id:prospectId,stage:'Ganados'},cc,'PATCH')).status,403);
  assert.equal((await call('/api/leads',{...prospect,id:prospectId,stage:'Ganados'},ac,'PATCH')).status,200);
+ const won=await env.DB.prepare('SELECT * FROM leads WHERE id=?').bind(prospectId).first();assert.equal(won.billing,'Mensual');assert.equal(won.services,'Gestión de redes, Video');assert.match(won.closed_at,/^\d{4}-\d{2}-\d{2}$/);
  assert.equal((await call('/api/data?company=lgna&month=2027-12',null,cc)).data.leads[0].stage,'Ganados');
  assert.equal((await call('/api/data?company='+other+'&month=2026-09',null,ac)).data.leads.length,0);
  const eventPath='/api/lead-events?company=lgna&lead='+prospectId;

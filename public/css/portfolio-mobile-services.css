@@ -1,0 +1,1 @@
+@media(max-width:760px){.getpes-cover-grid.is-mobile-moving{grid-template-columns:none;grid-auto-flow:column;grid-auto-columns:210px;scroll-snap-type:none;scroll-behavior:auto;touch-action:pan-y pinch-zoom}.getpes-cover-grid.is-mobile-moving .getpes-cover{scroll-snap-align:none}}

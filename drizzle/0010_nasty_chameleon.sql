@@ -1,0 +1,1 @@
+ALTER TABLE `tasks` ADD `time` text DEFAULT '' NOT NULL;
