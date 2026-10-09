@@ -843,6 +843,10 @@ section{ padding: 100px 0; }
 .footer-col h5{ font-size:.8rem; color: var(--muted); margin-bottom: 14px; }
 .footer-col a{ display:block; padding: 6px 0; font-size:.92rem; color: var(--paper); }
 .footer-col a:hover{ color: var(--lime); }
+.footer-social{display:flex;flex-wrap:wrap;gap:8px 20px;margin-top:20px}
+.footer-social a{display:inline-flex;align-items:center;gap:8px;min-height:44px;color:var(--paper);font-size:.92rem;transition:color .2s}
+.footer-social a:hover{color:var(--lime)}
+.footer-social svg{width:20px;height:20px;flex:none}
 .footer-bottom{
   border-top:1px solid var(--line); padding-top:24px;
   display:flex; justify-content:space-between; color: var(--muted); font-size:.82rem;
@@ -1020,3 +1024,63 @@ form,.contact-grid>*{min-width:0}
 @media(min-width:761px){.project-showcase .project-grid .portfolio-thumb{overflow:hidden}.project-showcase .project-grid .portfolio-thumb img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center}.project-showcase .project-grid .portfolio-thumb .tag{z-index:1}}
 
 .campaign-hero .hero-slider-dots{left:auto;right:max(28px,calc((100% - var(--wrap))/2 + 28px))}@media(max-width:760px){.campaign-hero .hero-slider-dots{left:auto;right:24px}}
+
+/* Slider countdown: compact dots with one expanding progress capsule. */
+.campaign-hero .hero-slider-dots{gap:0;align-items:center}
+.campaign-hero .hero-slider-dot,
+.campaign-hero .hero-slider-dot.is-active{position:relative;display:grid;place-items:center;width:24px;min-width:24px;height:44px;padding:0;border-radius:0;background:none;transition:width .25s ease}
+.campaign-hero .hero-slider-dot.is-active{width:88px}
+.hero-slider-dot-track{display:block;width:8px;height:8px;border-radius:99px;background:rgba(255,255,255,.45);overflow:hidden;transition:width .25s ease}
+.hero-slider-dot.is-active .hero-slider-dot-track{width:80px;background:rgba(255,255,255,.3)}
+.hero-slider-dot-fill{display:block;width:100%;height:100%;border-radius:inherit;background:var(--lime);transform:scaleX(0);transform-origin:left center}
+.hero-slider-dot:not(.is-active) .hero-slider-dot-fill{visibility:hidden}
+@media(prefers-reduced-motion:reduce){.campaign-hero .hero-slider-dot,.hero-slider-dot-track{transition:none}}
+
+/* Compact Getpes topbar, shared by the public pages. */
+#site-header{background:var(--lime);color:#101609;border-bottom:1px solid #10160918;backdrop-filter:none;-webkit-backdrop-filter:none;isolation:isolate}
+#site-header::before{content:'';position:absolute;inset:0 auto -1px 0;width:var(--topbar-cut,clamp(240px,22vw,440px));background:#0a0a0a;clip-path:polygon(0 0,100% 0,calc(100% - 40px) 100%,0 100%);pointer-events:none;z-index:-1}
+#site-header>.wrap{position:relative;width:100%;max-width:1440px;height:64px;padding:0 6%;gap:28px}
+#site-header .brand img{width:112px;height:44px;filter:none}
+#site-header .nav-links{gap:28px}
+#site-header .nav-links a{color:#101609;font-size:.875rem;font-weight:500}
+#site-header .nav-links a:hover{color:#101609;text-decoration:underline;text-underline-offset:5px}
+#site-header .nav-links a.active{color:#101609}
+#site-header .nav-links a.active::after{bottom:-7px;background:#101609}
+#site-header #nav-links .nav-cta{display:inline-flex;align-items:center;justify-content:center;min-height:40px;padding:9px 18px;border-radius:6px;background:#101609;color:#f5f7ef!important;border:1px solid #101609;box-shadow:none;backdrop-filter:none;-webkit-backdrop-filter:none;font-weight:600;text-decoration:none}
+#site-header #nav-links .nav-cta:hover{background:#25331b;border-color:#25331b}
+#site-header .nav-toggle{color:#101609}
+#site-header :is(a,button):focus-visible{outline:2px solid #101609;outline-offset:4px}
+@media(max-width:860px){
+ #site-header::before{width:var(--topbar-cut,calc(100% - 84px));clip-path:polygon(0 0,100% 0,calc(100% - 32px) 100%,0 100%)}
+ #site-header>.wrap{height:60px;padding:0 24px;gap:16px}
+ #site-header .brand img{width:108px;height:42px}
+ #site-header .nav-toggle{width:44px;height:44px}
+ #site-header .nav-links{inset:60px 0 auto;max-height:calc(100svh - 60px);padding:12px 20px 20px;gap:4px;background:var(--lime);border-bottom:1px solid #10160928;box-shadow:0 12px 24px #0002;justify-content:flex-start}
+ #site-header .nav-links a{font-size:1rem;padding:12px 16px;text-align:left;border-radius:6px}
+ #site-header .nav-links a.active{background:#10160938;color:#101609}
+ #site-header .nav-links a:not(.nav-cta):is(:hover,:focus-visible,:active){background:#1016094d;color:#101609;text-decoration:none}
+ html{background:#0a0a0a}
+ #site-header .nav-links .nav-cta{align-self:stretch;width:100%;margin-top:8px;min-height:44px;text-align:center}
+}
+@media(min-width:1700px){#site-header>.wrap{max-width:none}}
+
+/* Mobile navigation returns to the dark palette only while expanded. */
+@media(max-width:860px){
+ #site-header:has(.nav-links.open){background:#0a0a0a;color:var(--paper);border-bottom-color:#0a0a0a}
+ #site-header:has(.nav-links.open) .nav-toggle{color:var(--paper)}
+ #site-header:has(.nav-links.open) .nav-links{background:#0a0a0a;border-bottom-color:var(--line)}
+ #site-header:has(.nav-links.open) .nav-links a{color:var(--paper)}
+ #site-header:has(.nav-links.open) .nav-links a.active{background:#23271c;color:var(--lime)}
+ #site-header:has(.nav-links.open) .nav-links a:not(.nav-cta):is(:hover,:focus-visible,:active){background:#23271c;color:var(--lime)}
+ #site-header:has(.nav-links.open) :is(a,button):focus-visible{outline-color:var(--lime)}
+ #site-header:has(.nav-links.open) #nav-links .nav-cta{background:var(--lime);color:#0a0a0a!important;border-color:var(--lime)}
+}
+
+/* Keep the iPhone status-bar safe area black; green starts at the menu row. */
+@media(max-width:860px){
+ #site-header{padding-top:env(safe-area-inset-top,0px);background:#0a0a0a}
+ #site-header::after{content:'';position:absolute;inset:env(safe-area-inset-top,0px) 0 0;background:var(--lime);pointer-events:none;z-index:-2}
+ #site-header::before{top:env(safe-area-inset-top,0px)}
+ #site-header .nav-links{top:calc(60px + env(safe-area-inset-top,0px));max-height:calc(100svh - 60px - env(safe-area-inset-top,0px))}
+ #site-header:has(.nav-links.open)::after{background:#0a0a0a}
+}

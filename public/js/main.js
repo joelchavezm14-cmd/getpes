@@ -46,6 +46,20 @@ function renderHeader() {
   if (main) { main.id = 'contenido'; mount.insertAdjacentHTML('beforebegin', '<a class="skip-link" href="#contenido">Saltar al contenido</a>'); }
   const toggle = document.getElementById('nav-toggle');
   const nav = document.getElementById('nav-links');
+  // Place the diagonal before the desktop links or the mobile menu button.
+  const positionTopbarCut = () => {
+    if (matchMedia('(max-width:860px)').matches) {
+      mount.style.setProperty('--topbar-cut', `${toggle.getBoundingClientRect().left - mount.getBoundingClientRect().left - 16}px`);
+      return;
+    }
+    const firstLink = nav.querySelector('a');
+    if (firstLink) mount.style.setProperty('--topbar-cut', `${firstLink.getBoundingClientRect().left - mount.getBoundingClientRect().left - 28}px`);
+  };
+  positionTopbarCut();
+  const topbarObserver = new ResizeObserver(positionTopbarCut);
+  topbarObserver.observe(mount.querySelector('.wrap'));
+  topbarObserver.observe(nav.querySelector('a'));
+  document.fonts.ready.then(positionTopbarCut);
   toggle.addEventListener('click', () => {
     const isOpen = nav.classList.toggle('open');
     toggle.setAttribute('aria-expanded', String(isOpen));
@@ -73,6 +87,20 @@ function renderFooter() {
       <div class="footer-top">
         <div>
           <a href="index.html" class="brand"><img src="assets/getpes-logo.svg" alt="Getpes"></a>
+          <nav class="footer-social" aria-label="Redes sociales de Getpes">
+            <a href="https://www.instagram.com/getpes/" target="_blank" rel="noopener noreferrer" aria-label="Getpes en Instagram (abre una nueva pestaña)">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"></rect><circle cx="12" cy="12" r="4"></circle><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"></circle></svg>
+              Instagram
+            </a>
+            <a href="https://www.tiktok.com/@agencia.getpes?lang=es" target="_blank" rel="noopener noreferrer" aria-label="Getpes en TikTok (abre una nueva pestaña)">
+              <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M16.7 2h-3.2v13.2a3 3 0 1 1-2.6-3V9a6.2 6.2 0 1 0 5.8 6.2V8.5a8.3 8.3 0 0 0 4.3 1.2V6.5A5.2 5.2 0 0 1 16.7 2Z"></path></svg>
+              TikTok
+            </a>
+            <a href="https://www.youtube.com/@agenciagetpes" target="_blank" rel="noopener noreferrer" aria-label="Getpes en YouTube (abre una nueva pestaña)">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><rect x="2" y="5" width="20" height="14" rx="4"></rect><path d="m10 9 5 3-5 3Z" fill="currentColor" stroke="none"></path></svg>
+              YouTube
+            </a>
+          </nav>
         </div>
         <div class="footer-cols">
           <div class="footer-col">
@@ -214,7 +242,18 @@ function initHeroSlider() {
   const previous = slider.querySelector('.hero-slider-prev');
   const next = slider.querySelector('.hero-slider-next');
   const reduced = matchMedia('(prefers-reduced-motion: reduce)');
-  const DURATION = 1800, EASING = 'linear';
+  const DURATION = 1800, HOLD = 4000, EASING = 'linear';
+  const fills = dots.map(dot => {
+    const track = document.createElement('span');
+    track.className = 'hero-slider-dot-track';
+    track.setAttribute('aria-hidden', 'true');
+    const fill = document.createElement('span');
+    fill.className = 'hero-slider-dot-fill';
+    track.appendChild(fill); dot.appendChild(track);
+    return fill;
+  });
+  let progressAnimation = null;
+  const activePointers = new Set();
   let current = 0, timer, moving = false, pending = null, animations = [], generation = 0;
   const normalize = index => (index + slides.length) % slides.length;
 
@@ -280,11 +319,18 @@ function initHeroSlider() {
     });
   }
 
-  const stop = () => window.clearTimeout(timer);
+  const stop = () => {
+    window.clearTimeout(timer);
+    progressAnimation?.cancel(); progressAnimation = null;
+  };
   const start = () => {
     stop();
-    if (document.hidden || moving || pending || touchStart || slides.length < 2) return;
-    timer = window.setTimeout(() => showSlide(current + 1, 1), 4000);
+    if (document.hidden || moving || pending || touchStart || activePointers.size || slides.length < 2) return;
+    progressAnimation = fills[current]?.animate?.(
+      [{transform:'scaleX(0)'}, {transform:'scaleX(1)'}],
+      {duration:HOLD, easing:'linear', fill:'forwards'}
+    );
+    timer = window.setTimeout(() => showSlide(current + 1, 1), HOLD);
   };
   dots.forEach((dot,index) => dot.addEventListener('click', () => {
     showSlide(index,index < current ? -1 : 1); start();
@@ -294,12 +340,26 @@ function initHeroSlider() {
   next?.addEventListener('click', () => navigate(1));
   const swipeSurface=slider.closest('.hero')||slider;
   let touchStart=null,swiped=false;
+  // Pause from initial contact, not only when the eventual click/swipe fires.
+  swipeSurface.addEventListener('pointerdown', event => {
+    activePointers.add(event.pointerId); stop();
+  }, {passive:true});
+  const releasePointer = event => {
+    if (!activePointers.delete(event.pointerId)) return;
+    start(); // start also waits for the gesture and any slide transition to finish.
+  };
+  document.addEventListener('pointerup', releasePointer, {passive:true});
+  document.addEventListener('pointercancel', releasePointer, {passive:true});
+  window.addEventListener('blur', () => {
+    activePointers.clear(); touchStart=null; stop();
+  });
+  window.addEventListener('focus', () => start());
   swipeSurface.addEventListener('touchstart',e=>{swiped=false;touchStart=e.touches.length===1?{x:e.touches[0].clientX,y:e.touches[0].clientY}:null;stop();},{passive:true});
   swipeSurface.addEventListener('touchend',e=>{if(!touchStart||!e.changedTouches.length){start();return;}const dx=e.changedTouches[0].clientX-touchStart.x,dy=e.changedTouches[0].clientY-touchStart.y;touchStart=null;if(Math.abs(dx)>50&&Math.abs(dx)>Math.abs(dy)*1.4){swiped=true;navigate(dx<0?1:-1);}else start();},{passive:true});
   swipeSurface.addEventListener('touchcancel',()=>{touchStart=null;start();},{passive:true});
   swipeSurface.addEventListener('click',e=>{if(swiped){e.preventDefault();e.stopPropagation();swiped=false;}},true);
   document.addEventListener('visibilitychange', () => {
-    if (document.hidden) { stop(); pending=null; finish(); } else start();
+    if (document.hidden) { stop(); activePointers.clear(); touchStart=null; pending=null; finish(); } else start();
   });
   reduced.addEventListener('change', () => { pending=null; finish(); start(); });
   updateState(); start();
@@ -331,21 +391,65 @@ document.addEventListener('DOMContentLoaded', () => {
   renderFloatingWhatsApp();
   initContactForm();
   initScrollReveal();
+  initScrollExitFade();
   initHeroSlider();
   initReviewsCarousel();
 });
 
+function initScrollExitFade() {
+  const main = document.querySelector('body > #site-header + main, body > main');
+  if (!main || !CSS.supports('mask-image', 'linear-gradient(#000, #000)')) return;
+  const sections = [...main.querySelectorAll(':scope > section')];
+  const targets = sections.length ? sections : [...main.querySelectorAll(':scope > .wrap > *')];
+  if (!targets.length) return;
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)');
+  const header = document.getElementById('site-header');
+  let scheduled = false;
+  const reset = element => {
+    element.style.removeProperty('mask-image');
+    element.style.removeProperty('-webkit-mask-image');
+  };
+  const update = () => {
+    scheduled = false;
+    const edge = Math.max(0, header?.getBoundingClientRect().bottom || 0);
+    const band = Math.min(150, innerHeight * .18);
+    for (const element of targets) {
+      const rect = element.getBoundingClientRect();
+      const passed = edge - rect.top;
+      if (reduced.matches || passed <= 0 || rect.bottom <= 0 || rect.top >= innerHeight || element.contains(document.activeElement)) {
+        reset(element);
+        continue;
+      }
+      // Only soften the outgoing top edge; content farther down stays opaque.
+      const progress = Math.min(1, passed / band);
+      const alpha = 1 - .45 * progress;
+      const start = Math.max(0, passed - band * .35);
+      const end = passed + band;
+      const mask = `linear-gradient(to bottom, rgba(0,0,0,${alpha.toFixed(3)}) ${start.toFixed(1)}px, #000 ${end.toFixed(1)}px)`;
+      element.style.maskImage = mask;
+      element.style.webkitMaskImage = mask;
+    }
+  };
+  const schedule = () => {
+    if (!scheduled) { scheduled = true; requestAnimationFrame(update); }
+  };
+  addEventListener('scroll', schedule, { passive: true });
+  addEventListener('resize', schedule, { passive: true });
+  document.addEventListener('focusin', schedule);
+  document.addEventListener('focusout', schedule);
+  reduced.addEventListener('change', schedule);
+  update();
+}
+
 
 function initServicesCarousel(){
  const track=document.getElementById('services-track');if(!track)return;
- const controls=document.querySelector('.services-controls'),previous=document.getElementById('services-prev'),next=document.getElementById('services-next');
- const shell=document.createElement('div');shell.className='services-shell';track.before(shell);shell.append(controls,track);
+ const shell=document.createElement('div');shell.className='services-shell';track.before(shell);shell.append(track);
  const originals=[...track.children];originals.forEach((card,index)=>card.dataset.service=String(index+1));for(let copy=0;copy<2;copy++)originals.forEach(card=>{const clone=card.cloneNode(true);clone.setAttribute('aria-hidden','true');track.append(clone);});
  let span=0,position=0,last=0,drag=null,anim=null,touching=false,visible=false,touch=null,velocity=0;
- const measure=()=>{const mobile=matchMedia('(max-width:760px)').matches;track.style.setProperty('--service-width',`${mobile?shell.clientWidth:(shell.clientWidth-24)/2}px`);track.style.setProperty('--service-gutter',`${shell.getBoundingClientRect().left}px`);span=track.children[originals.length].offsetLeft-track.children[0].offsetLeft;position=span;track.scrollLeft=position;};
+ const measure=()=>{const mobile=matchMedia('(max-width:760px)').matches;track.style.setProperty('--service-width',`${mobile?shell.clientWidth:(shell.clientWidth-24)/2}px`);track.style.setProperty('--service-gutter',`${shell.getBoundingClientRect().left}px`);track.style.setProperty('--service-viewport',`${document.documentElement.clientWidth}px`);span=track.children[originals.length].offsetLeft-track.children[0].offsetLeft;position=span;track.scrollLeft=position;};
  const wrap=()=>{if(!span)return;if(position<span*.5)position+=span;else if(position>=span*1.5)position-=span;};
  const move=direction=>{if(!span)return;position=track.scrollLeft;wrap();track.scrollLeft=position;anim={from:position,to:position+direction*span/originals.length,time:performance.now()};};
- previous.onclick=()=>move(-1);next.onclick=()=>move(1);
  track.addEventListener('pointerdown',e=>{if(e.pointerType!=='mouse'||e.button!==0)return;anim=null;drag={x:e.clientX,left:track.scrollLeft};track.setPointerCapture(e.pointerId);track.classList.add('is-dragging');});
  track.addEventListener('pointermove',e=>{if(drag){position=drag.left+drag.x-e.clientX;track.scrollLeft=position;}});
  const release=()=>{if(!drag)return;drag=null;track.classList.remove('is-dragging');position=track.scrollLeft;wrap();track.scrollLeft=position;};

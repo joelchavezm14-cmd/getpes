@@ -3,7 +3,7 @@
 .campaign-hero .hero-slide.is-active,.campaign-hero .hero-slide.is-exiting{visibility:visible}
 .campaign-hero .hero-slide.is-active{z-index:1}
 .campaign-hero .hero-slide.is-exiting{z-index:2}
-.campaign-hero .hero-slide-motion{background-image:url('../assets/inicio/hero-fotografia-escritorio.png')}
+.campaign-hero .hero-slide-motion{background-image:url('../assets/inicio/hero-estudio-contenidos-elegido.webp')}
 .campaign-hero .hero-slider::after{background:none!important}
 .campaign-hero .hero-slide::after{content:'';position:absolute;inset:0;pointer-events:none;background:linear-gradient(90deg,rgba(0,0,0,.94),rgba(0,0,0,.38))}
 .campaign-hero .hero-slide-motion::after{background:linear-gradient(90deg,rgba(0,0,0,.45),transparent 65%)}
@@ -15,7 +15,7 @@
 .campaign-hero .hero-slider-arrow:hover{background:transparent;color:var(--lime)}
 .campaign-hero .hero-slider-arrow svg{width:40px;height:40px;stroke-width:1.5}
 @media(max-width:860px){
-  .campaign-hero .hero-slide-motion{background-image:url('../assets/inicio/hero-g-movil.png')}
+  .campaign-hero .hero-slide-motion{background-image:url('../assets/inicio/hero-g-movil.webp')}
   .campaign-hero .hero-slide>.wrap{justify-content:flex-start;padding-top:38px;padding-bottom:100px}
   .campaign-hero .hero-slide::after{background:linear-gradient(180deg,#080a0a 18%,rgba(8,10,10,.9) 36%,transparent 66%)}
   .campaign-hero .hero-slide-work::after{background:linear-gradient(180deg,#090909 35%,rgba(9,9,9,.85) 54%,rgba(9,9,9,.08) 85%)}

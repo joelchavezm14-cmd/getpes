@@ -1,1 +1,0 @@
-Imágenes locales actualmente usadas, agrupadas por página. Las imágenes compartidas se incluyen en cada página que las usa. Se conservan los archivos originales y las rutas de la web.

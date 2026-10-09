@@ -3,7 +3,10 @@
   if(!track)return;
   const group=track.querySelector('.portfolio-captures-group');
   group.querySelectorAll('.portfolio-capture').forEach(frame=>{
-    const background=frame.querySelector('img').cloneNode(true);
+    const image=frame.querySelector('img');
+    if(!image)return;
+    frame.querySelector('.portfolio-capture-placeholder')?.remove();
+    const background=image.cloneNode(true);
     background.className='capture-backdrop';
     background.alt='';
     background.setAttribute('aria-hidden','true');
