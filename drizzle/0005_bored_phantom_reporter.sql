@@ -1,1 +1,0 @@
-ALTER TABLE `companies` ADD `show_meetings` integer DEFAULT 1 NOT NULL;
